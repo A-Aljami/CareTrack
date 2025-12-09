@@ -1,8 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { api } from '@/services/api'
 
 export const useAppointmentsStore = defineStore('appointments', () => {
   const appointments = ref([])
+
+  async function fetchAppointments() {
+    const data = await api.getAppointments()
+    appointments.value = data
+  }
 
   function setAppointments(data) {
     appointments.value = data
@@ -21,6 +27,7 @@ export const useAppointmentsStore = defineStore('appointments', () => {
 
   return {
     appointments,
+    fetchAppointments,
     setAppointments,
     addAppointment,
     updateAppointmentStatus
