@@ -1,31 +1,66 @@
 export const mockPatients = [
   {
-    id: '1',
+    id: 1,
     name: 'John Smith',
     age: 45,
     gender: 'Male',
     medicalId: 'MED001'
   },
   {
-    id: '2',
+    id: 2,
     name: 'Sarah Johnson',
     age: 32,
     gender: 'Female',
     medicalId: 'MED002'
   },
   {
-    id: '3',
+    id: 3,
     name: 'Michael Brown',
     age: 58,
     gender: 'Male',
     medicalId: 'MED003'
   },
   {
-    id: '4',
+    id: 4,
     name: 'Emily Davis',
-    age: 27,
+    age: 28,
     gender: 'Female',
     medicalId: 'MED004'
+  },
+  {
+    id: 5,
+    name: 'David Wilson',
+    age: 51,
+    gender: 'Male',
+    medicalId: 'MED005'
+  },
+  {
+    id: 6,
+    name: 'Lisa Martinez',
+    age: 39,
+    gender: 'Female',
+    medicalId: 'MED006'
+  },
+  {
+    id: 7,
+    name: 'James Taylor',
+    age: 62,
+    gender: 'Male',
+    medicalId: 'MED007'
+  },
+  {
+    id: 8,
+    name: 'Maria Garcia',
+    age: 41,
+    gender: 'Female',
+    medicalId: 'MED008'
+  },
+  {
+    id: 9,
+    name: 'Robert Anderson',
+    age: 55,
+    gender: 'Male',
+    medicalId: 'MED009'
   }
 ]
 
