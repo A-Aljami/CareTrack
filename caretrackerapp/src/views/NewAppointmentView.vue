@@ -44,6 +44,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePatientsStore } from '@/stores/patients'
 import { useAppointmentsStore } from '@/stores/appointments'
+import { APPOINTMENT_STATUS } from '@/constants/appointmentStatus'
 import BaseButton from '@/components/BaseButton.vue'
 
 const router = useRouter()
@@ -81,10 +82,9 @@ function handleSubmit() {
     date: appointment.value.date,
     time: appointment.value.time,
     reason: appointment.value.reason,
-    status: 'scheduled'
+    status: APPOINTMENT_STATUS.SCHEDULED
   }
 
-  console.log('Adding new appointment:', newAppointment)
   appointmentsStore.addAppointment(newAppointment)
 
   router.push('/dashboard')

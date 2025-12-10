@@ -2,10 +2,14 @@
   <div class="patients">
     <h1>Patients List</h1>
 
-    <!-- Loading Spinner -->
     <LoadingSpinner v-if="patientsStore.isLoading" message="Loading patients..." />
 
-    <!-- Patients Content -->
+    <ErrorState
+      v-else-if="patientsStore.error"
+      :message="patientsStore.error"
+      @retry="handleRetry"
+    />
+
     <template v-else>
       <input
         v-model="searchQuery"
@@ -36,6 +40,7 @@ import { ref, computed, onMounted } from 'vue'
 import { usePatientsStore } from '@/stores/patients'
 import { useRouter } from 'vue-router'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
+import ErrorState from '@/components/ErrorState.vue'
 
 const patientsStore = usePatientsStore()
 const router = useRouter()
@@ -55,6 +60,10 @@ const filteredPatients = computed(() => {
 
 function viewPatient(id) {
   router.push(`/patients/${id}`)
+}
+
+function handleRetry() {
+  patientsStore.retryFetch()
 }
 
 onMounted(() => {

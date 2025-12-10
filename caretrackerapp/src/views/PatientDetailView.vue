@@ -1,7 +1,6 @@
 <template>
   <div class="patient-detail">
     <div v-if="patient" class="content-wrapper">
-      <!-- Patient Card - Centered -->
       <div class="patient-card">
         <div class="patient-avatar">
           {{ patient.name.charAt(0) }}
@@ -23,14 +22,12 @@
         </div>
       </div>
 
-      <!-- Sidebar - Visit Notes -->
       <div class="sidebar">
         <div class="sidebar-header">
           <h2>Visit Notes</h2>
           <button class="add-note-btn" @click="showForm = !showForm">+</button>
         </div>
 
-        <!-- Add Note Form -->
         <form v-if="showForm" @submit.prevent="handleSubmit" class="note-form">
           <div class="form-group">
             <label>Date:</label>
@@ -79,6 +76,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePatientsStore } from '@/stores/patients'
 import { useNotesStore } from '@/stores/notes'
+import { formatDate } from '@/utils/formatters'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
 
@@ -97,14 +95,6 @@ const newNote = ref({
   visitType: '',
   note: ''
 })
-
-function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
 
 function handleSubmit() {
   notesStore.addNote({
@@ -141,7 +131,6 @@ onMounted(() => {
   align-items: start;
 }
 
-/* Patient Card - Centered */
 .patient-card {
   background: white;
   padding: 3rem;
@@ -200,7 +189,6 @@ onMounted(() => {
   font-weight: 600;
 }
 
-/* Sidebar */
 .sidebar {
   background: white;
   padding: 1.5rem;
@@ -246,7 +234,6 @@ onMounted(() => {
   background: #45a049;
 }
 
-/* Note Form */
 .note-form {
   background: #f9f9f9;
   padding: 1rem;
@@ -285,8 +272,6 @@ onMounted(() => {
   border-color: #4CAF50;
 }
 
-
-/* Notes List */
 .notes-list {
   display: flex;
   flex-direction: column;

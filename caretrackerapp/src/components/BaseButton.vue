@@ -51,7 +51,6 @@ defineProps({
   width: 100%;
 }
 
-/* Primary variant */
 .base-button.primary {
   background-color: #4CAF50;
   color: white;
@@ -63,7 +62,6 @@ defineProps({
   box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
 
-/* Secondary variant */
 .base-button.secondary {
   background-color: #2c3e50;
   color: white;
@@ -75,7 +73,6 @@ defineProps({
   box-shadow: 0 2px 8px rgba(44, 62, 80, 0.3);
 }
 
-/* Danger variant */
 .base-button.danger {
   background-color: #f44336;
   color: white;
@@ -87,7 +84,6 @@ defineProps({
   box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
 }
 
-/* Success variant */
 .base-button.success {
   background-color: #4CAF50;
   color: white;

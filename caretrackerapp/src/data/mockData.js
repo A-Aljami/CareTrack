@@ -64,7 +64,6 @@ export const mockPatients = [
   }
 ]
 
-// Helper function to get date offsets
 const getDate = (daysOffset = 0) => {
   const date = new Date()
   date.setDate(date.getDate() + daysOffset)
@@ -72,12 +71,11 @@ const getDate = (daysOffset = 0) => {
 }
 
 export const mockAppointments = [
-  // TODAY'S APPOINTMENTS
   {
     id: '1',
     patientId: '1',
     patientName: 'John Smith',
-    date: getDate(0), // Today
+    date: getDate(0),
     time: '09:00',
     reason: 'Annual Checkup',
     status: 'scheduled'
@@ -86,7 +84,7 @@ export const mockAppointments = [
     id: '2',
     patientId: '2',
     patientName: 'Sarah Johnson',
-    date: getDate(0), // Today
+    date: getDate(0),
     time: '10:30',
     reason: 'Follow-up Visit',
     status: 'checked-in'
@@ -95,7 +93,7 @@ export const mockAppointments = [
     id: '3',
     patientId: '3',
     patientName: 'Michael Brown',
-    date: getDate(0), // Today
+    date: getDate(0),
     time: '14:00',
     reason: 'Lab Result Review',
     status: 'completed'
@@ -104,18 +102,16 @@ export const mockAppointments = [
     id: '4',
     patientId: '4',
     patientName: 'Emily Davis',
-    date: getDate(0), // Today
+    date: getDate(0),
     time: '15:30',
     reason: 'Consultation',
     status: 'scheduled'
   },
-
-  // THIS WEEK'S APPOINTMENTS (not today)
   {
     id: '5',
     patientId: '5',
     patientName: 'David Wilson',
-    date: getDate(2), // 2 days from now
+    date: getDate(2),
     time: '11:00',
     reason: 'Physical Examination',
     status: 'scheduled'
@@ -124,7 +120,7 @@ export const mockAppointments = [
     id: '6',
     patientId: '6',
     patientName: 'Lisa Martinez',
-    date: getDate(3), // 3 days from now
+    date: getDate(3),
     time: '13:30',
     reason: 'Prescription Renewal',
     status: 'scheduled'
@@ -133,18 +129,16 @@ export const mockAppointments = [
     id: '7',
     patientId: '7',
     patientName: 'James Taylor',
-    date: getDate(-2), // 2 days ago
+    date: getDate(-2),
     time: '10:00',
     reason: 'Blood Pressure Check',
     status: 'completed'
   },
-
-  // THIS MONTH'S APPOINTMENTS (not this week)
   {
     id: '8',
     patientId: '8',
     patientName: 'Maria Garcia',
-    date: getDate(10), // 10 days from now
+    date: getDate(10),
     time: '14:30',
     reason: 'Vaccination',
     status: 'scheduled'
@@ -153,7 +147,7 @@ export const mockAppointments = [
     id: '9',
     patientId: '9',
     patientName: 'Robert Anderson',
-    date: getDate(15), // 15 days from now
+    date: getDate(15),
     time: '09:30',
     reason: 'Diabetes Management',
     status: 'scheduled'
@@ -162,18 +156,16 @@ export const mockAppointments = [
     id: '10',
     patientId: '1',
     patientName: 'John Smith',
-    date: getDate(-10), // 10 days ago
+    date: getDate(-10),
     time: '11:30',
     reason: 'Eye Exam',
     status: 'completed'
   },
-
-  // OLDER APPOINTMENTS (previous months)
   {
     id: '11',
     patientId: '2',
     patientName: 'Sarah Johnson',
-    date: getDate(-40), // ~1.5 months ago
+    date: getDate(-40),
     time: '10:00',
     reason: 'General Checkup',
     status: 'completed'
@@ -182,7 +174,7 @@ export const mockAppointments = [
     id: '12',
     patientId: '3',
     patientName: 'Michael Brown',
-    date: getDate(-60), // ~2 months ago
+    date: getDate(-60),
     time: '15:00',
     reason: 'Flu Shot',
     status: 'completed'

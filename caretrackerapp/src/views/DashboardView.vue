@@ -1,11 +1,14 @@
 <template>
   <div class="dashboard">
-    <!-- Loading Spinner -->
     <LoadingSpinner v-if="appointmentsStore.isLoading" message="Loading appointments..." />
 
-    <!-- Dashboard Content -->
+    <ErrorState
+      v-else-if="appointmentsStore.error"
+      :message="appointmentsStore.error"
+      @retry="handleRetry"
+    />
+
     <template v-else>
-      <!-- Header -->
       <div class="dashboard-header">
         <div class="header-left">
           <h1>Appointments</h1>
@@ -13,70 +16,64 @@
         </div>
       </div>
 
-    <!-- Calendar Controls -->
-    <div class="calendar-controls">
-      <div class="date-navigator">
-        <button class="nav-btn" @click="previousPeriod">&lt;</button>
-        <div class="current-period">
-          <span class="period-label">{{ currentPeriodLabel }}</span>
+      <div class="calendar-controls">
+        <div class="date-navigator">
+          <button class="nav-btn" @click="previousPeriod">&lt;</button>
+          <div class="current-period">
+            <span class="period-label">{{ currentPeriodLabel }}</span>
+          </div>
+          <button class="nav-btn" @click="nextPeriod">&gt;</button>
         </div>
-        <button class="nav-btn" @click="nextPeriod">&gt;</button>
-      </div>
-      <div class="filters">
-        <select class="filter-select" v-model="statusFilter">
-          <option value="all">All Status</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="checked-in">Checked-In</option>
-          <option value="completed">Completed</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Week Calendar Grid -->
-    <div class="calendar-grid">
-      <!-- Day Headers -->
-      <div class="day-headers">
-        <div class="time-column-header"></div>
-        <div
-          v-for="day in weekDays"
-          :key="day.date"
-          :class="['day-header', { 'today': isToday(day.date) }]"
-        >
-          <div class="day-name">{{ day.dayName }} {{ day.dayNum }}</div>
+        <div class="filters">
+          <select class="filter-select" v-model="statusFilter">
+            <option value="all">All Status</option>
+            <option :value="APPOINTMENT_STATUS.SCHEDULED">Scheduled</option>
+            <option :value="APPOINTMENT_STATUS.CHECKED_IN">Checked-In</option>
+            <option :value="APPOINTMENT_STATUS.COMPLETED">Completed</option>
+          </select>
         </div>
       </div>
 
-      <!-- Time Grid -->
-      <div class="time-grid">
-        <div v-for="hour in timeSlots" :key="hour" class="time-row">
-          <div class="time-label">{{ formatHour(hour) }}</div>
+      <div class="calendar-grid">
+        <div class="day-headers">
+          <div class="time-column-header"></div>
           <div
             v-for="day in weekDays"
-            :key="`${day.date}-${hour}`"
-            class="time-cell"
+            :key="day.date"
+            :class="['day-header', { 'today': isToday(day.date) }]"
           >
-            <!-- Appointments in this time slot -->
+            <div class="day-name">{{ day.dayName }} {{ day.dayNum }}</div>
+          </div>
+        </div>
+
+        <div class="time-grid">
+          <div v-for="hour in timeSlots" :key="hour" class="time-row">
+            <div class="time-label">{{ formatHour(hour) }}</div>
             <div
-              v-for="appointment in getAppointmentsForSlot(day.date, hour)"
-              :key="appointment.id"
-              :class="['appointment-block', `status-${appointment.status}`]"
-              @click="viewAppointment(appointment)"
+              v-for="day in weekDays"
+              :key="`${day.date}-${hour}`"
+              class="time-cell"
             >
-              <div class="appointment-time">{{ appointment.time }}</div>
-              <div class="appointment-patient">
-                <span class="patient-avatar">{{ appointment.patientName.charAt(0) }}</span>
-                <span class="patient-name">{{ appointment.patientName }}</span>
+              <div
+                v-for="appointment in getAppointmentsForSlot(day.date, hour)"
+                :key="appointment.id"
+                :class="['appointment-block', `status-${appointment.status}`]"
+                @click="viewAppointment(appointment)"
+              >
+                <div class="appointment-time">{{ appointment.time }}</div>
+                <div class="appointment-patient">
+                  <span class="patient-avatar">{{ appointment.patientName.charAt(0) }}</span>
+                  <span class="patient-name">{{ appointment.patientName }}</span>
+                </div>
+                <div class="appointment-reason">{{ appointment.reason }}</div>
+                <StatusBadge :status="appointment.status" />
               </div>
-              <div class="appointment-reason">{{ appointment.reason }}</div>
-              <StatusBadge :status="appointment.status" />
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Stats Summary -->
-    <div class="stats-summary">
+      <div class="stats-summary">
       <BaseCard class="stat-card">
         <h3>Total Appointments</h3>
         <p class="stat-number">{{ filteredWeekAppointments.length }}</p>
@@ -89,10 +86,9 @@
         <h3>Completed</h3>
         <p class="stat-number">{{ completedCount }}</p>
       </BaseCard>
-    </div>
+      </div>
 
-    <!-- Appointment Details Modal -->
-    <div v-if="selectedAppointment" class="modal-overlay" @click="closeModal">
+      <div v-if="selectedAppointment" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <h2>Appointment Details</h2>
@@ -118,9 +114,9 @@
           <div class="detail-row">
             <span class="detail-label">Status:</span>
             <select v-model="selectedAppointment.status" class="status-select">
-              <option value="scheduled">Scheduled</option>
-              <option value="checked-in">Checked-In</option>
-              <option value="completed">Completed</option>
+              <option :value="APPOINTMENT_STATUS.SCHEDULED">Scheduled</option>
+              <option :value="APPOINTMENT_STATUS.CHECKED_IN">Checked-In</option>
+              <option :value="APPOINTMENT_STATUS.COMPLETED">Completed</option>
             </select>
           </div>
         </div>
@@ -137,9 +133,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAppointmentsStore } from '@/stores/appointments'
+import { APPOINTMENT_STATUS } from '@/constants/appointmentStatus'
+import { formatDate, formatHour } from '@/utils/formatters'
 import BaseCard from '@/components/BaseCard.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
+import ErrorState from '@/components/ErrorState.vue'
 
 const appointmentsStore = useAppointmentsStore()
 const currentWeekOffset = ref(0)
@@ -148,19 +147,17 @@ const selectedAppointment = ref(null)
 
 const appointments = computed(() => appointmentsStore.appointments)
 
-// Time slots from 9 AM to 5 PM
 const timeSlots = [9, 10, 11, 12, 13, 14, 15, 16, 17]
 
-// Get current week's days
 const weekDays = computed(() => {
   const days = []
   const today = new Date()
   const currentWeekStart = new Date(today)
   currentWeekStart.setDate(today.getDate() - today.getDay() + (currentWeekOffset.value * 7))
 
-  for (let i = 0; i < 5; i++) { // Mon-Fri
+  for (let i = 0; i < 5; i++) {
     const day = new Date(currentWeekStart)
-    day.setDate(currentWeekStart.getDate() + i + 1) // +1 to start from Monday
+    day.setDate(currentWeekStart.getDate() + i + 1)
 
     days.push({
       date: day.toISOString().split('T')[0],
@@ -172,7 +169,6 @@ const weekDays = computed(() => {
   return days
 })
 
-// Get appointments for the current week
 const weekAppointments = computed(() => {
   const weekStart = weekDays.value[0]?.date
   const weekEnd = weekDays.value[4]?.date
@@ -200,35 +196,22 @@ function getWeekOfMonth(date) {
   return weekNumber
 }
 
-// Apply status filter to weekAppointments
 const filteredWeekAppointments = computed(() => {
   if (statusFilter.value === 'all') return weekAppointments.value
   return weekAppointments.value.filter(a => a.status === statusFilter.value)
 })
 
 const checkedInCount = computed(() => {
-  return filteredWeekAppointments.value.filter(a => a.status === 'checked-in').length
+  return filteredWeekAppointments.value.filter(a => a.status === APPOINTMENT_STATUS.CHECKED_IN).length
 })
 
 const completedCount = computed(() => {
-  return filteredWeekAppointments.value.filter(a => a.status === 'completed').length
+  return filteredWeekAppointments.value.filter(a => a.status === APPOINTMENT_STATUS.COMPLETED).length
 })
-
-function getWeekNumber(date) {
-  const firstDayOfYear = new Date(date.getFullYear(), 0, 1)
-  const pastDaysOfYear = (date - firstDayOfYear) / 86400000
-  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
-}
 
 function isToday(dateString) {
   const today = new Date().toISOString().split('T')[0]
   return dateString === today
-}
-
-function formatHour(hour) {
-  if (hour === 12) return '12 PM'
-  if (hour > 12) return `${hour - 12} PM`
-  return `${hour} AM`
 }
 
 function getAppointmentsForSlot(date, hour) {
@@ -238,15 +221,9 @@ function getAppointmentsForSlot(date, hour) {
     const aptHour = parseInt(apt.time.split(':')[0])
     if (aptHour !== hour) return false
 
-    // Apply status filter
     if (statusFilter.value === 'all') return true
     return apt.status === statusFilter.value
   })
-
-  // Debug logging
-  if (filtered.length > 0) {
-    console.log(`Found ${filtered.length} appointments for ${date} at ${hour}:00`, filtered)
-  }
 
   return filtered
 }
@@ -260,7 +237,6 @@ function nextPeriod() {
 }
 
 function viewAppointment(appointment) {
-  // Create a copy of the appointment to avoid direct mutation
   selectedAppointment.value = { ...appointment }
 }
 
@@ -278,20 +254,12 @@ function saveAppointment() {
   }
 }
 
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
+function handleRetry() {
+  appointmentsStore.retryFetch()
 }
 
 onMounted(() => {
   appointmentsStore.fetchAppointments()
-  console.log('Dashboard mounted - All appointments:', appointments.value)
-  console.log('Current week days:', weekDays.value)
 })
 </script>
 
@@ -306,7 +274,6 @@ onMounted(() => {
   flex-direction: column;
 }
 
-/* Header */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -328,22 +295,6 @@ onMounted(() => {
   font-size: 0.75rem;
 }
 
-.header-right {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.view-selector {
-  padding: 0.5rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: white;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-/* Calendar Controls */
 .calendar-controls {
   display: flex;
   justify-content: space-between;
@@ -398,19 +349,6 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.filter-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: white;
-  cursor: pointer;
-  font-size: 0.875rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Calendar Grid */
 .calendar-grid {
   background: white;
   border-radius: 8px;
@@ -451,16 +389,15 @@ onMounted(() => {
   font-size: 0.875rem;
 }
 
-/* Time Grid */
 .time-grid {
   overflow-y: auto;
   flex: 1;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .time-grid::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
 }
 
 .time-row {
@@ -492,7 +429,6 @@ onMounted(() => {
   background: #f9fafb;
 }
 
-/* Appointment Blocks */
 .appointment-block {
   padding: 0.5rem;
   border-radius: 4px;
@@ -561,7 +497,6 @@ onMounted(() => {
   margin-bottom: 0.5rem;
 }
 
-/* Stats Summary */
 .stats-summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -587,7 +522,6 @@ onMounted(() => {
   margin: 0;
 }
 
-/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;

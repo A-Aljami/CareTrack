@@ -1,18 +1,26 @@
 import { mockPatients, mockAppointments } from '@/data/mockData'
 
-// Simulate network delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+const shouldFail = () => Math.random() < 0.2
 
 export const api = {
   async getAppointments() {
-    // Simulate 1-2 second loading time
     await delay(1000 + Math.random() * 1000)
+
+    if (shouldFail()) {
+      throw new Error('Failed to fetch appointments. Please try again.')
+    }
+
     return mockAppointments
   },
 
   async getPatients() {
-    // Simulate 800-1500ms loading time
     await delay(800 + Math.random() * 700)
+
+    if (shouldFail()) {
+      throw new Error('Failed to fetch patients. Please try again.')
+    }
+
     return mockPatients
   }
 }
