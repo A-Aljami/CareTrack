@@ -130,7 +130,6 @@ onMounted(() => {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  padding-top: calc(60px + 2rem);
 }
 
 .content-wrapper {
@@ -207,7 +206,7 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   height: fit-content;
   position: sticky;
-  top: calc(60px + 2rem);
+  top: 90px;
 }
 
 .sidebar-header {

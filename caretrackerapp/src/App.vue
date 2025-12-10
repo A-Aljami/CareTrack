@@ -1,7 +1,9 @@
 <template>
   <div id="app">
     <NavHeader v-if="authStore.isLoggedIn" />
-    <RouterView />
+    <main :class="{ 'main-content': true, 'has-header': authStore.isLoggedIn }">
+      <RouterView />
+    </main>
   </div>
 </template>
 
@@ -24,18 +26,32 @@ html, body {
   height: 100%;
   width: 100%;
   font-family: Arial, sans-serif;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 #app {
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   display: flex;
   flex-direction: column;
-  padding-top: 60px;
+  background-color: #ffffff;
+  overflow: hidden;
 }
 
-#app:has(.nav-header) {
-  padding-top: 0;
+.main-content {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.main-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.main-content.has-header {
+  padding-top: 70px;
 }
 </style>

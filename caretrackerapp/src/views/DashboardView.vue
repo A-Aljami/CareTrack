@@ -75,11 +75,11 @@ onMounted(() => {
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
-  padding-top: calc(60px + 2rem);
+  min-height: 100vh;
+  background-color: #ffffff;
 }
 
 h1 {
-  padding-top: 4rem;
   margin-top: 0;
   margin-bottom: 2rem;
   color: #333;

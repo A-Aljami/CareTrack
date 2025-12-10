@@ -36,16 +36,18 @@ function handleLogout() {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 1000;
   margin: 0;
+  height: 70px;
 }
 
 .nav-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  padding: 0 2rem;
   width: 100%;
+  height: 100%;
 }
 
 .logo {
