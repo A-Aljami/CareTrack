@@ -34,7 +34,7 @@ html, body {
   width: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
+  background-color: #f8f9fa;
   overflow: hidden;
 }
 

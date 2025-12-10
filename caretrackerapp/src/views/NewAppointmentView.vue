@@ -6,7 +6,7 @@
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
           <label>Patient:</label>
-          <select v-model="appointment.patientId" required>
+          <select v-model.number="appointment.patientId" required>
             <option value="">Select patient...</option>
             <option v-for="patient in patients" :key="patient.id" :value="patient.id">
               {{ patient.name }} ({{ patient.medicalId }})
@@ -33,7 +33,7 @@
           {{ errorMessage }}
         </div>
 
-        <button type="submit">Create Appointment</button>
+        <BaseButton type="submit" variant="success" full-width>Create Appointment</BaseButton>
       </form>
     </div>
   </div>
@@ -44,6 +44,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePatientsStore } from '@/stores/patients'
 import { useAppointmentsStore } from '@/stores/appointments'
+import BaseButton from '@/components/BaseButton.vue'
 
 const router = useRouter()
 const patientsStore = usePatientsStore()
@@ -73,14 +74,18 @@ function handleSubmit() {
 
   const patient = patientsStore.getPatientById(appointment.value.patientId)
 
-  appointmentsStore.addAppointment({
-    patientId: appointment.value.patientId,
+  const newAppointment = {
+    id: String(Date.now()),
+    patientId: String(appointment.value.patientId),
     patientName: patient.name,
     date: appointment.value.date,
     time: appointment.value.time,
     reason: appointment.value.reason,
     status: 'scheduled'
-  })
+  }
+
+  console.log('Adding new appointment:', newAppointment)
+  appointmentsStore.addAppointment(newAppointment)
 
   router.push('/dashboard')
   window.scrollTo(0, 0)
@@ -151,20 +156,4 @@ h1 {
   font-size: 0.9rem;
 }
 
-button {
-  background: #4CAF50;
-  color: white;
-  padding: 0.85rem 2rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: background 0.3s;
-  width: 100%;
-}
-
-button:hover {
-  background: #45a049;
-}
 </style>

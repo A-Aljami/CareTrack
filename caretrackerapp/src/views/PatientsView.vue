@@ -1,27 +1,33 @@
 <template>
   <div class="patients">
     <h1>Patients List</h1>
-    
-    <input 
-      v-model="searchQuery" 
-      type="text" 
-      placeholder="Search by name or medical ID..."
-      class="search-input"
-    />
 
-    <div class="patients-list">
-      <div 
-        v-for="patient in filteredPatients" 
-        :key="patient.id" 
-        class="patient-card"
-        @click="viewPatient(patient.id)"
-      >
-        <h3>{{ patient.name }}</h3>
-        <p><strong>Age:</strong> {{ patient.age }}</p>
-        <p><strong>Gender:</strong> {{ patient.gender }}</p>
-        <p><strong>Medical ID:</strong> {{ patient.medicalId }}</p>
+    <!-- Loading Spinner -->
+    <LoadingSpinner v-if="patientsStore.isLoading" message="Loading patients..." />
+
+    <!-- Patients Content -->
+    <template v-else>
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search by name or medical ID..."
+        class="search-input"
+      />
+
+      <div class="patients-list">
+        <div
+          v-for="patient in filteredPatients"
+          :key="patient.id"
+          class="patient-card"
+          @click="viewPatient(patient.id)"
+        >
+          <h3>{{ patient.name }}</h3>
+          <p><strong>Age:</strong> {{ patient.age }}</p>
+          <p><strong>Gender:</strong> {{ patient.gender }}</p>
+          <p><strong>Medical ID:</strong> {{ patient.medicalId }}</p>
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -29,6 +35,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { usePatientsStore } from '@/stores/patients'
 import { useRouter } from 'vue-router'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const patientsStore = usePatientsStore()
 const router = useRouter()

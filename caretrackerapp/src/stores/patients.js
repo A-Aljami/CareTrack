@@ -4,6 +4,7 @@ import { api } from '@/services/api'
 
 export const usePatientsStore = defineStore('patients', () => {
   const patients = ref([])
+  const isLoading = ref(false)
 
   function setPatients(data) {
     patients.value = data
@@ -14,12 +15,18 @@ export const usePatientsStore = defineStore('patients', () => {
   }
 
   async function fetchPatients() {
-    const data = await api.getPatients()
-    patients.value = data
+    isLoading.value = true
+    try {
+      const data = await api.getPatients()
+      patients.value = data
+    } finally {
+      isLoading.value = false
+    }
   }
 
   return {
     patients,
+    isLoading,
     fetchPatients,
     setPatients,
     getPatientById

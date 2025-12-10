@@ -4,10 +4,20 @@ import { api } from '@/services/api'
 
 export const useAppointmentsStore = defineStore('appointments', () => {
   const appointments = ref([])
+  const isLoaded = ref(false)
+  const isLoading = ref(false)
 
   async function fetchAppointments() {
-    const data = await api.getAppointments()
-    appointments.value = data
+    if (isLoaded.value) return
+
+    isLoading.value = true
+    try {
+      const data = await api.getAppointments()
+      appointments.value = data
+      isLoaded.value = true
+    } finally {
+      isLoading.value = false
+    }
   }
 
   function setAppointments(data) {
@@ -27,6 +37,7 @@ export const useAppointmentsStore = defineStore('appointments', () => {
 
   return {
     appointments,
+    isLoading,
     fetchAppointments,
     setAppointments,
     addAppointment,

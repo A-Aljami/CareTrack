@@ -23,7 +23,7 @@
           />
         </div>
         
-        <button type="submit" class="login-btn">Login</button>
+        <BaseButton type="submit" variant="primary" full-width>Login</BaseButton>
       </form>
     </div>
   </div>
@@ -33,6 +33,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import BaseButton from '@/components/BaseButton.vue'
 
 const email = ref('')
 const password = ref('')
@@ -103,19 +104,4 @@ input:focus {
   border-color: #4CAF50;
 }
 
-.login-btn {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-top: 1rem;
-}
-
-.login-btn:hover {
-  background-color: #45a049;
-}
 </style>

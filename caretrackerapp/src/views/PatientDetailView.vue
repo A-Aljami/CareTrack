@@ -52,17 +52,17 @@
             <textarea v-model="newNote.note" rows="3" required></textarea>
           </div>
 
-          <button type="submit">Add Note</button>
+          <BaseButton type="submit" variant="success" full-width>Add Note</BaseButton>
         </form>
 
         <div class="notes-list">
-          <div v-for="note in patientNotes" :key="note.id" class="note-card">
+          <BaseCard v-for="note in patientNotes" :key="note.id" class="note-card">
             <div class="note-header">
               <span class="note-date">{{ formatDate(note.date) }}</span>
               <span class="note-type">{{ note.visitType }}</span>
             </div>
             <p class="note-text">{{ note.note }}</p>
-          </div>
+          </BaseCard>
           <p v-if="patientNotes.length === 0" class="no-notes">No visit notes yet.</p>
         </div>
       </div>
@@ -79,6 +79,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePatientsStore } from '@/stores/patients'
 import { useNotesStore } from '@/stores/notes'
+import BaseCard from '@/components/BaseCard.vue'
+import BaseButton from '@/components/BaseButton.vue'
 
 const route = useRoute()
 const patientsStore = usePatientsStore()
@@ -283,22 +285,6 @@ onMounted(() => {
   border-color: #4CAF50;
 }
 
-.note-form button {
-  background: #4CAF50;
-  color: white;
-  padding: 0.6rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: background 0.3s;
-  width: 100%;
-}
-
-.note-form button:hover {
-  background: #45a049;
-}
 
 /* Notes List */
 .notes-list {
@@ -310,9 +296,6 @@ onMounted(() => {
 }
 
 .note-card {
-  background: #f9f9f9;
-  padding: 1rem;
-  border-radius: 8px;
   border-left: 4px solid #4CAF50;
 }
 
