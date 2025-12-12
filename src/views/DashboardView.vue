@@ -9,123 +9,243 @@
     />
 
     <template v-else>
-      <div class="dashboard-header">
-        <div class="header-left">
-          <h1>Appointments</h1>
-          <p class="subtitle">Comprehensive insights into patient care, department performance, and hospital efficiency metrics.</p>
-        </div>
-      </div>
+      <div class="dashboard-layout">
+        <!-- Left Panel: Mini Calendar & Filters -->
+        <aside class="left-panel">
+          <!-- Mini Calendar -->
+          <div class="mini-calendar-section">
+            <div class="section-header">
+              <h3>{{ selectedMonth }}</h3>
+              <div class="month-nav">
+                <button @click="previousMonth" class="month-nav-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                <button @click="nextMonth" class="month-nav-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-      <div class="calendar-controls">
-        <div class="date-navigator">
-          <button class="nav-btn" @click="previousPeriod">&lt;</button>
-          <div class="current-period">
-            <span class="period-label">{{ currentPeriodLabel }}</span>
-          </div>
-          <button class="nav-btn" @click="nextPeriod">&gt;</button>
-        </div>
-        <div class="filters">
-          <select class="filter-select" v-model="statusFilter">
-            <option value="all">All Status</option>
-            <option :value="APPOINTMENT_STATUS.SCHEDULED">Scheduled</option>
-            <option :value="APPOINTMENT_STATUS.CHECKED_IN">Checked-In</option>
-            <option :value="APPOINTMENT_STATUS.COMPLETED">Completed</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="calendar-grid">
-        <div class="day-headers">
-          <div class="time-column-header"></div>
-          <div
-            v-for="day in weekDays"
-            :key="day.date"
-            :class="['day-header', { 'today': isToday(day.date) }]"
-          >
-            <div class="day-name">{{ day.dayName }} {{ day.dayNum }}</div>
-          </div>
-        </div>
-
-        <div class="time-grid">
-          <div v-for="hour in timeSlots" :key="hour" class="time-row">
-            <div class="time-label">{{ formatHour(hour) }}</div>
-            <div
-              v-for="day in weekDays"
-              :key="`${day.date}-${hour}`"
-              class="time-cell"
-            >
-              <div
-                v-for="appointment in getAppointmentsForSlot(day.date, hour)"
-                :key="appointment.id"
-                :class="['appointment-block', `status-${appointment.status}`]"
-                @click="viewAppointment(appointment)"
-              >
-                <div class="appointment-time">{{ appointment.time }}</div>
-                <div class="appointment-patient">
-                  <span class="patient-avatar">{{ appointment.patientName.charAt(0) }}</span>
-                  <span class="patient-name">{{ appointment.patientName }}</span>
+            <div class="mini-calendar">
+              <div class="mini-calendar-header">
+                <div v-for="day in ['S', 'M', 'T', 'W', 'T', 'F', 'S']" :key="day" class="mini-day-label">
+                  {{ day }}
                 </div>
-                <div class="appointment-reason">{{ appointment.reason }}</div>
-                <StatusBadge :status="appointment.status" />
+              </div>
+              <div class="mini-calendar-days">
+                <button
+                  v-for="day in calendarDays"
+                  :key="day.date"
+                  :class="[
+                    'mini-day',
+                    {
+                      'other-month': !day.isCurrentMonth,
+                      'today': day.isToday,
+                      'selected': day.isSelected,
+                      'has-events': day.hasEvents
+                    }
+                  ]"
+                  @click="selectDate(day)"
+                  :disabled="!day.isCurrentMonth"
+                >
+                  <span class="mini-day-number">{{ day.dayNum }}</span>
+                  <span v-if="day.hasEvents" class="event-indicator"></span>
+                </button>
               </div>
             </div>
           </div>
-        </div>
+
+          <!-- Status Filters -->
+          <div class="filters-section">
+            <div class="section-header">
+              <h3>Status Filter</h3>
+            </div>
+            <div class="filter-options">
+              <button
+                v-for="filter in statusFilters"
+                :key="filter.value"
+                :class="['filter-btn', { 'active': statusFilter === filter.value }]"
+                @click="statusFilter = filter.value"
+              >
+                <span :class="['filter-dot', filter.color]"></span>
+                <span>{{ filter.label }}</span>
+                <span class="filter-count">{{ getStatusCount(filter.value) }}</span>
+              </button>
+            </div>
+          </div>
+
+        </aside>
+
+        <!-- Main Content: Calendar -->
+        <main class="main-content">
+          <div class="calendar-header">
+            <div class="header-title">
+              <h1>Appointments</h1>
+              <button class="today-btn" @click="goToToday">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                Today
+              </button>
+            </div>
+            <div class="header-controls">
+              <div class="week-navigator">
+                <button class="nav-btn" @click="previousWeek">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                <span class="week-label">{{ currentWeekLabel }}</span>
+                <button class="nav-btn" @click="nextWeek">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </div>
+              <select v-model="viewMode" class="view-select">
+                <option value="day">Day</option>
+                <option value="week">Week</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="calendar-container">
+            <div class="calendar-grid" :class="`view-${viewMode}`">
+              <!-- Day Headers -->
+              <div class="day-headers">
+                <div class="time-column-header"></div>
+                <div
+                  v-for="day in weekDays"
+                  :key="day.date"
+                  :class="['day-header', { 'today': isToday(day.date) }]"
+                >
+                  <div class="day-label">{{ day.dayName }}</div>
+                  <div class="day-number">{{ day.dayNum }}</div>
+                </div>
+              </div>
+
+              <!-- Time Grid -->
+              <div class="time-grid-container">
+                <div v-for="hour in timeSlots" :key="hour" class="time-row">
+                  <div class="time-label">{{ formatHour(hour) }}</div>
+                  <div
+                    v-for="day in weekDays"
+                    :key="`${day.date}-${hour}`"
+                    class="time-cell"
+                  >
+                    <div
+                      v-for="appointment in getAppointmentsForSlot(day.date, hour)"
+                      :key="appointment.id"
+                      :class="['appointment-card', `status-${appointment.status}`]"
+                      @click="viewAppointment(appointment)"
+                    >
+                      <div class="appointment-time">{{ appointment.time }}</div>
+                      <div class="appointment-title">{{ appointment.patientName }}</div>
+                      <div class="appointment-subtitle">{{ appointment.reason }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel: Upcoming Appointments -->
+        <aside class="right-panel">
+          <div class="section-header">
+            <h3>Upcoming</h3>
+          </div>
+
+          <div class="upcoming-list">
+            <div class="upcoming-section">
+              <div class="upcoming-date-label">Today</div>
+              <div
+                v-for="apt in todayAppointments"
+                :key="apt.id"
+                :class="['upcoming-card', `status-${apt.status}`]"
+                @click="viewAppointment(apt)"
+              >
+                <div class="upcoming-icon" :style="{ backgroundColor: getStatusColor(apt.status) }">
+                  {{ apt.patientName.charAt(0) }}
+                </div>
+                <div class="upcoming-info">
+                  <div class="upcoming-title">{{ apt.reason }}</div>
+                  <div class="upcoming-time">{{ apt.time }}</div>
+                </div>
+                <div class="upcoming-date">{{ formatShortDate(apt.date) }}</div>
+              </div>
+            </div>
+
+            <div v-if="tomorrowAppointments.length > 0" class="upcoming-section">
+              <div class="upcoming-date-label">Tomorrow</div>
+              <div
+                v-for="apt in tomorrowAppointments"
+                :key="apt.id"
+                :class="['upcoming-card', `status-${apt.status}`]"
+                @click="viewAppointment(apt)"
+              >
+                <div class="upcoming-icon" :style="{ backgroundColor: getStatusColor(apt.status) }">
+                  {{ apt.patientName.charAt(0) }}
+                </div>
+                <div class="upcoming-info">
+                  <div class="upcoming-title">{{ apt.reason }}</div>
+                  <div class="upcoming-time">{{ apt.time }}</div>
+                </div>
+                <div class="upcoming-date">{{ formatShortDate(apt.date) }}</div>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
 
-      <div class="stats-summary">
-      <BaseCard class="stat-card">
-        <h3>Total Appointments</h3>
-        <p class="stat-number">{{ filteredWeekAppointments.length }}</p>
-      </BaseCard>
-      <BaseCard class="stat-card">
-        <h3>Checked-In</h3>
-        <p class="stat-number">{{ checkedInCount }}</p>
-      </BaseCard>
-      <BaseCard class="stat-card">
-        <h3>Completed</h3>
-        <p class="stat-number">{{ completedCount }}</p>
-      </BaseCard>
-      </div>
-
+      <!-- Appointment Details Modal -->
       <div v-if="selectedAppointment" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h2>Appointment Details</h2>
-          <button class="close-btn" @click="closeModal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="detail-row">
-            <span class="detail-label">Patient:</span>
-            <span class="detail-value">{{ selectedAppointment.patientName }}</span>
+        <div class="modal-content" @click.stop>
+          <div class="modal-header">
+            <h2>Appointment Details</h2>
+            <button class="close-btn" @click="closeModal">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Date:</span>
-            <span class="detail-value">{{ formatDate(selectedAppointment.date) }}</span>
+          <div class="modal-body">
+            <div class="detail-row">
+              <span class="detail-label">Patient:</span>
+              <span class="detail-value">{{ selectedAppointment.patientName }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Date:</span>
+              <span class="detail-value">{{ formatDate(selectedAppointment.date) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Time:</span>
+              <span class="detail-value">{{ selectedAppointment.time }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Reason:</span>
+              <span class="detail-value">{{ selectedAppointment.reason }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Status:</span>
+              <select v-model="selectedAppointment.status" class="status-select">
+                <option :value="APPOINTMENT_STATUS.SCHEDULED">Scheduled</option>
+                <option :value="APPOINTMENT_STATUS.CHECKED_IN">Checked-In</option>
+                <option :value="APPOINTMENT_STATUS.COMPLETED">Completed</option>
+              </select>
+            </div>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Time:</span>
-            <span class="detail-value">{{ selectedAppointment.time }}</span>
+          <div class="modal-footer">
+            <BaseButton variant="secondary" @click="closeModal">Cancel</BaseButton>
+            <BaseButton variant="primary" @click="saveAppointment">Save Changes</BaseButton>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Reason:</span>
-            <span class="detail-value">{{ selectedAppointment.reason }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Status:</span>
-            <select v-model="selectedAppointment.status" class="status-select">
-              <option :value="APPOINTMENT_STATUS.SCHEDULED">Scheduled</option>
-              <option :value="APPOINTMENT_STATUS.CHECKED_IN">Checked-In</option>
-              <option :value="APPOINTMENT_STATUS.COMPLETED">Completed</option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-save" @click="saveAppointment">Save Changes</button>
-          <button class="btn-cancel" @click="closeModal">Cancel</button>
         </div>
       </div>
-    </div>
     </template>
   </div>
 </template>
@@ -135,105 +255,247 @@ import { ref, computed, onMounted } from 'vue'
 import { useAppointmentsStore } from '@/stores/appointments'
 import { APPOINTMENT_STATUS } from '@/constants/appointmentStatus'
 import { formatDate, formatHour } from '@/utils/formatters'
-import BaseCard from '@/components/BaseCard.vue'
-import StatusBadge from '@/components/StatusBadge.vue'
+import BaseButton from '@/components/BaseButton.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import ErrorState from '@/components/ErrorState.vue'
 
 const appointmentsStore = useAppointmentsStore()
 const currentWeekOffset = ref(0)
+const currentMonthOffset = ref(0)
 const statusFilter = ref('all')
 const selectedAppointment = ref(null)
+const selectedDate = ref(new Date())
+const viewMode = ref('day')
 
 const appointments = computed(() => appointmentsStore.appointments)
-
 const timeSlots = [9, 10, 11, 12, 13, 14, 15, 16, 17]
 
-const weekDays = computed(() => {
+const statusFilters = [
+  { value: 'all', label: 'All Status', color: 'gray' },
+  { value: APPOINTMENT_STATUS.SCHEDULED, label: 'Scheduled', color: 'blue' },
+  { value: APPOINTMENT_STATUS.CHECKED_IN, label: 'Checked-In', color: 'orange' },
+  { value: APPOINTMENT_STATUS.COMPLETED, label: 'Completed', color: 'green' }
+]
+
+// Mini Calendar Logic
+const selectedMonth = computed(() => {
+  const date = new Date()
+  date.setMonth(date.getMonth() + currentMonthOffset.value)
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+})
+
+const calendarDays = computed(() => {
   const days = []
   const today = new Date()
-  const currentWeekStart = new Date(today)
-  currentWeekStart.setDate(today.getDate() - today.getDay() + (currentWeekOffset.value * 7))
+  const currentDate = new Date()
+  currentDate.setMonth(currentDate.getMonth() + currentMonthOffset.value)
 
-  for (let i = 0; i < 5; i++) {
-    const day = new Date(currentWeekStart)
-    day.setDate(currentWeekStart.getDate() + i + 1)
+  const year = currentDate.getFullYear()
+  const month = currentDate.getMonth()
+
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
+  const startDay = firstDay.getDay()
+  const totalDays = lastDay.getDate()
+
+  // Previous month days
+  const prevMonthLastDay = new Date(year, month, 0).getDate()
+  const prevMonth = month === 0 ? 11 : month - 1
+  const prevYear = month === 0 ? year - 1 : year
+  for (let i = startDay - 1; i >= 0; i--) {
+    const dayNum = prevMonthLastDay - i
+    const dateStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
+    days.push({
+      dayNum: dayNum,
+      date: dateStr,
+      isCurrentMonth: false,
+      isToday: false,
+      isSelected: false,
+      hasEvents: false
+    })
+  }
+
+  // Current month days
+  for (let i = 1; i <= totalDays; i++) {
+    // Create date string directly without timezone conversion
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+
+    // For comparison, create date strings in the same way
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const selectedStr = `${selectedDate.value.getFullYear()}-${String(selectedDate.value.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.value.getDate()).padStart(2, '0')}`
 
     days.push({
-      date: day.toISOString().split('T')[0],
-      dayName: day.toLocaleDateString('en-US', { weekday: 'short' }),
+      dayNum: i,
+      date: dateStr,
+      isCurrentMonth: true,
+      isToday: dateStr === todayStr,
+      isSelected: dateStr === selectedStr,
+      hasEvents: appointments.value.some(apt => apt.date === dateStr)
+    })
+  }
+
+  // Next month days
+  const remainingDays = 42 - days.length
+  const nextMonth = month === 11 ? 0 : month + 1
+  const nextYear = month === 11 ? year + 1 : year
+  for (let i = 1; i <= remainingDays; i++) {
+    const dateStr = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+    days.push({
+      dayNum: i,
+      date: dateStr,
+      isCurrentMonth: false,
+      isToday: false,
+      isSelected: false,
+      hasEvents: false
+    })
+  }
+
+  return days
+})
+
+// Week View Logic - Shows single day or week based on view mode
+const weekDays = computed(() => {
+  const days = []
+
+  if (viewMode.value === 'week') {
+    // Week view: show Monday-Friday
+    const baseDate = new Date(selectedDate.value)
+    const dayOfWeek = baseDate.getDay()
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+
+    const monday = new Date(baseDate)
+    monday.setDate(baseDate.getDate() + mondayOffset + (currentWeekOffset.value * 7))
+
+    for (let i = 0; i < 5; i++) {
+      const day = new Date(monday)
+      day.setDate(monday.getDate() + i)
+
+      // Create date string without timezone conversion
+      const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
+
+      days.push({
+        date: dateStr,
+        dayName: day.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayNum: day.getDate(),
+        fullDate: day
+      })
+    }
+  } else {
+    // Day view: show only the selected day
+    const day = new Date(selectedDate.value)
+    const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
+
+    days.push({
+      date: dateStr,
+      dayName: day.toLocaleDateString('en-US', { weekday: 'long' }),
       dayNum: day.getDate(),
       fullDate: day
     })
   }
+
   return days
 })
 
-const weekAppointments = computed(() => {
-  const weekStart = weekDays.value[0]?.date
-  const weekEnd = weekDays.value[4]?.date
-
-  return appointments.value.filter(apt => {
-    return apt.date >= weekStart && apt.date <= weekEnd
-  })
-})
-
-const currentPeriodLabel = computed(() => {
+const currentWeekLabel = computed(() => {
   if (weekDays.value.length === 0) return ''
   const firstDay = weekDays.value[0].fullDate
-  const lastDay = weekDays.value[4].fullDate
+  const lastDay = weekDays.value[weekDays.value.length - 1].fullDate
 
-  const monthName = firstDay.toLocaleDateString('en-US', { month: 'long' })
-  const year = firstDay.getFullYear()
+  const options = { month: 'short', day: 'numeric' }
 
-  return `${monthName} ${year} - Week ${getWeekOfMonth(firstDay)}`
+  // For single day view, show just the date
+  if (viewMode.value === 'day') {
+    return firstDay.toLocaleDateString('en-US', options)
+  }
+
+  // For week view, show range
+  return `${firstDay.toLocaleDateString('en-US', options)} - ${lastDay.toLocaleDateString('en-US', options)}`
 })
-
-function getWeekOfMonth(date) {
-  const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1)
-  const dayOfMonth = date.getDate()
-  const weekNumber = Math.ceil((dayOfMonth + firstDayOfMonth.getDay()) / 7)
-  return weekNumber
-}
 
 const filteredWeekAppointments = computed(() => {
-  if (statusFilter.value === 'all') return weekAppointments.value
-  return weekAppointments.value.filter(a => a.status === statusFilter.value)
-})
+  if (weekDays.value.length === 0) return []
 
-const checkedInCount = computed(() => {
-  return filteredWeekAppointments.value.filter(a => a.status === APPOINTMENT_STATUS.CHECKED_IN).length
-})
+  const weekStart = weekDays.value[0]?.date
+  const weekEnd = weekDays.value[weekDays.value.length - 1]?.date
 
-const completedCount = computed(() => {
-  return filteredWeekAppointments.value.filter(a => a.status === APPOINTMENT_STATUS.COMPLETED).length
-})
+  let filtered = appointments.value.filter(apt => apt.date >= weekStart && apt.date <= weekEnd)
 
-function isToday(dateString) {
-  const today = new Date().toISOString().split('T')[0]
-  return dateString === today
-}
-
-function getAppointmentsForSlot(date, hour) {
-  const filtered = appointments.value.filter(apt => {
-    if (apt.date !== date) return false
-
-    const aptHour = parseInt(apt.time.split(':')[0])
-    if (aptHour !== hour) return false
-
-    if (statusFilter.value === 'all') return true
-    return apt.status === statusFilter.value
-  })
+  if (statusFilter.value !== 'all') {
+    filtered = filtered.filter(apt => apt.status === statusFilter.value)
+  }
 
   return filtered
+})
+
+const todayAppointments = computed(() => {
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  return appointments.value.filter(apt => apt.date === todayStr).slice(0, 3)
+})
+
+const tomorrowAppointments = computed(() => {
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
+  return appointments.value.filter(apt => apt.date === tomorrowStr).slice(0, 3)
+})
+
+function getStatusCount(status) {
+  if (status === 'all') return filteredWeekAppointments.value.length
+  return filteredWeekAppointments.value.filter(apt => apt.status === status).length
 }
 
-function previousPeriod() {
+function getStatusColor(status) {
+  const colors = {
+    [APPOINTMENT_STATUS.SCHEDULED]: 'var(--color-primary-500)',
+    [APPOINTMENT_STATUS.CHECKED_IN]: 'var(--color-warning-500)',
+    [APPOINTMENT_STATUS.COMPLETED]: 'var(--color-success-500)'
+  }
+  return colors[status] || 'var(--color-gray-400)'
+}
+
+function selectDate(day) {
+  if (!day.isCurrentMonth) return
+  // Create date from ISO string properly to avoid timezone issues
+  const [year, month, dayNum] = day.date.split('-').map(Number)
+  selectedDate.value = new Date(year, month - 1, dayNum)
+  currentWeekOffset.value = 0
+}
+
+function previousMonth() {
+  currentMonthOffset.value--
+}
+
+function nextMonth() {
+  currentMonthOffset.value++
+}
+
+function previousWeek() {
   currentWeekOffset.value--
 }
 
-function nextPeriod() {
+function nextWeek() {
   currentWeekOffset.value++
+}
+
+function goToToday() {
+  selectedDate.value = new Date()
+  currentWeekOffset.value = 0
+  currentMonthOffset.value = 0
+}
+
+function isToday(date) {
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  return date === todayStr
+}
+
+function getAppointmentsForSlot(date, hour) {
+  return filteredWeekAppointments.value.filter(apt => {
+    if (apt.date !== date) return false
+    const aptHour = parseInt(apt.time.split(':')[0])
+    return aptHour === hour
+  })
 }
 
 function viewAppointment(appointment) {
@@ -245,303 +507,614 @@ function closeModal() {
 }
 
 function saveAppointment() {
-  if (selectedAppointment.value) {
-    appointmentsStore.updateAppointmentStatus(
-      selectedAppointment.value.id,
-      selectedAppointment.value.status
-    )
-    closeModal()
-  }
+  appointmentsStore.updateAppointment(selectedAppointment.value)
+  closeModal()
 }
 
-function handleRetry() {
-  appointmentsStore.retryFetch()
+function formatShortDate(dateStr) {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-onMounted(() => {
-  appointmentsStore.fetchAppointments()
+async function handleRetry() {
+  await appointmentsStore.fetchAppointments()
+}
+
+onMounted(async () => {
+  await appointmentsStore.fetchAppointments()
 })
 </script>
 
 <style scoped>
 .dashboard {
-  padding: 1rem;
-  max-width: 100%;
-  background-color: #f8f9fa;
-  height: calc(100vh - 70px);
+  height: 100%;
+  background-color: var(--color-background-secondary);
   overflow: hidden;
+}
+
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  gap: var(--spacing-6);
+  height: 100%;
+  padding: var(--spacing-6);
+  overflow: hidden;
+}
+
+/* ============================================
+   LEFT PANEL - Mini Calendar & Filters
+   ============================================ */
+.left-panel {
   display: flex;
   flex-direction: column;
+  gap: var(--spacing-6);
+  overflow-y: auto;
+  padding-right: var(--spacing-2);
 }
 
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-  flex-shrink: 0;
-}
-
-.header-left h1 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1.5rem;
-  color: #1a1a1a;
-  font-weight: 600;
-}
-
-.subtitle {
-  margin: 0;
-  color: #6b7280;
-  font-size: 0.75rem;
-}
-
-.calendar-controls {
+.section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--spacing-4);
+}
+
+.section-header h3 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.month-nav {
+  display: flex;
+  gap: var(--spacing-1);
+}
+
+.month-nav-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--color-background-tertiary);
+  border-radius: var(--radius-base);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.month-nav-btn:hover {
+  background: var(--color-gray-200);
+  color: var(--color-text-primary);
+}
+
+.mini-calendar {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+}
+
+.mini-calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--spacing-1);
+  margin-bottom: var(--spacing-2);
+}
+
+.mini-day-label {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-tertiary);
+  padding: var(--spacing-1);
+}
+
+.mini-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--spacing-1);
+}
+
+.mini-day {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-base);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.mini-day-number {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-normal);
+}
+
+.mini-day.other-month .mini-day-number {
+  color: var(--color-text-disabled);
+}
+
+.mini-day:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.mini-day:not(.other-month):not(:disabled):hover {
+  background: var(--color-primary-50);
+}
+
+.mini-day.today {
+  background: var(--color-primary-500);
+}
+
+.mini-day.today .mini-day-number {
+  color: white;
+  font-weight: var(--font-weight-semibold);
+}
+
+.mini-day.selected {
+  background: var(--color-primary-100);
+  border: 2px solid var(--color-primary-500);
+}
+
+.mini-day.has-events::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  background: var(--color-primary-500);
+  border-radius: var(--radius-full);
+}
+
+.mini-day.today.has-events::after {
   background: white;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Filter Options */
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.filter-btn:hover {
+  background: var(--color-background-tertiary);
+  border-color: var(--color-border-strong);
+}
+
+.filter-btn.active {
+  background: var(--color-primary-50);
+  border-color: var(--color-primary-500);
+  color: var(--color-primary-700);
+}
+
+.filter-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
-.date-navigator {
+.filter-dot.gray {
+  background: var(--color-gray-400);
+}
+
+.filter-dot.blue {
+  background: var(--color-primary-500);
+}
+
+.filter-dot.orange {
+  background: var(--color-warning-500);
+}
+
+.filter-dot.green {
+  background: var(--color-success-500);
+}
+
+.filter-count {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  background: var(--color-background-tertiary);
+  padding: 2px var(--spacing-2);
+  border-radius: var(--radius-full);
+}
+
+/* ============================================
+   MAIN CONTENT - Calendar
+   ============================================ */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.calendar-header {
+  padding: var(--spacing-6);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-title {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--spacing-4);
+}
+
+.header-title h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.today-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  background: var(--color-background-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.today-btn:hover {
+  background: var(--color-gray-200);
+  color: var(--color-text-primary);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.week-navigator {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
 }
 
 .nav-btn {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-base);
+  color: var(--color-text-secondary);
   cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
 }
 
 .nav-btn:hover {
-  background: #f3f4f6;
+  background: var(--color-background-tertiary);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
 }
 
-.period-label {
-  font-weight: 600;
-  color: #1a1a1a;
-  min-width: 100px;
+.week-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  min-width: 140px;
   text-align: center;
 }
 
-.filters {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.filter-select {
-  padding: 0.5rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: white;
-  font-size: 0.875rem;
+.view-select {
+  padding: var(--spacing-2) var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-surface);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
   cursor: pointer;
 }
 
-.calendar-grid {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  overflow: hidden;
-  margin-bottom: 0.75rem;
+.calendar-container {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.calendar-grid {
+  min-width: 100%;
 }
 
 .day-headers {
   display: grid;
+  gap: 1px;
+  background: var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Day view: 1 column */
+.calendar-grid.view-day .day-headers {
+  grid-template-columns: 80px 1fr;
+}
+
+/* Week view: 5 columns */
+.calendar-grid.view-week .day-headers {
   grid-template-columns: 80px repeat(5, 1fr);
-  border-bottom: 2px solid #e5e7eb;
-  background: #f9fafb;
 }
 
 .time-column-header {
-  border-right: 1px solid #e5e7eb;
+  background: var(--color-surface);
+  padding: var(--spacing-4);
 }
 
 .day-header {
-  padding: 1rem;
+  background: var(--color-surface);
+  padding: var(--spacing-4);
   text-align: center;
-  font-weight: 600;
-  color: #374151;
-  border-right: 1px solid #e5e7eb;
 }
 
 .day-header.today {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--color-primary-50);
 }
 
-.day-name {
-  font-size: 0.875rem;
+.day-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.time-grid {
-  overflow-y: auto;
-  flex: 1;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+.day-number {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-top: var(--spacing-1);
 }
 
-.time-grid::-webkit-scrollbar {
-  display: none;
+.day-header.today .day-number {
+  color: var(--color-primary-600);
+}
+
+.time-grid-container {
+  background: var(--color-background-secondary);
 }
 
 .time-row {
   display: grid;
+  gap: 1px;
+  background: var(--color-border);
+  min-height: 80px;
+}
+
+/* Day view: 1 column */
+.calendar-grid.view-day .time-row {
+  grid-template-columns: 80px 1fr;
+}
+
+/* Week view: 5 columns */
+.calendar-grid.view-week .time-row {
   grid-template-columns: 80px repeat(5, 1fr);
-  border-bottom: 1px solid #f3f4f6;
-  min-height: 60px;
 }
 
 .time-label {
-  padding: 0.75rem;
-  font-size: 0.75rem;
-  color: #6b7280;
+  background: var(--color-surface);
+  padding: var(--spacing-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
   text-align: right;
-  border-right: 1px solid #e5e7eb;
-  background: #f9fafb;
+  font-weight: var(--font-weight-medium);
 }
 
 .time-cell {
-  border-right: 1px solid #f3f4f6;
-  padding: 0.5rem;
+  background: var(--color-surface);
+  padding: var(--spacing-2);
   position: relative;
-  background: white;
-  min-height: 60px;
-  overflow: visible;
+  min-height: 80px;
 }
 
-.time-cell:hover {
-  background: #f9fafb;
-}
-
-.appointment-block {
-  padding: 0.5rem;
-  border-radius: 4px;
-  margin-bottom: 0.25rem;
-  cursor: pointer;
-  transition: all 0.2s;
+.appointment-card {
+  padding: var(--spacing-3);
+  border-radius: var(--radius-base);
   border-left: 3px solid;
-  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-bottom: var(--spacing-2);
 }
 
-.appointment-block:hover {
+.appointment-card:last-child {
+  margin-bottom: 0;
+}
+
+.appointment-card.status-scheduled {
+  background: var(--color-primary-50);
+  border-color: var(--color-primary-500);
+}
+
+.appointment-card.status-checked-in {
+  background: var(--color-warning-50);
+  border-color: var(--color-warning-500);
+}
+
+.appointment-card.status-completed {
+  background: var(--color-success-50);
+  border-color: var(--color-success-500);
+}
+
+.appointment-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.status-scheduled {
-  background: #fef3c7;
-  border-left-color: #f59e0b;
-}
-
-.status-checked-in {
-  background: #dbeafe;
-  border-left-color: #3b82f6;
-}
-
-.status-completed {
-  background: #d1fae5;
-  border-left-color: #10b981;
+  box-shadow: var(--shadow-md);
 }
 
 .appointment-time {
-  font-size: 0.7rem;
-  color: #6b7280;
-  margin-bottom: 0.25rem;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-1);
 }
 
-.appointment-patient {
+.appointment-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appointment-subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================
+   RIGHT PANEL - Upcoming Appointments
+   ============================================ */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding-left: var(--spacing-2);
+}
+
+.upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.upcoming-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.upcoming-date-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.upcoming-card {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
-.patient-avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #4CAF50;
-  color: white;
+.upcoming-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong);
+}
+
+.upcoming-icon {
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 600;
-}
-
-.patient-name {
-  font-weight: 600;
-  color: #1a1a1a;
-  font-size: 0.8rem;
-}
-
-.appointment-reason {
-  color: #6b7280;
-  font-size: 0.7rem;
-  margin-bottom: 0.5rem;
-}
-
-.stats-summary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
+  border-radius: var(--radius-lg);
+  color: white;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
   flex-shrink: 0;
 }
 
-.stat-card {
-  text-align: center;
+.upcoming-info {
+  flex: 1;
+  min-width: 0;
 }
 
-.stat-card h3 {
-  margin: 0 0 0.25rem 0;
-  color: #6b7280;
-  font-size: 0.75rem;
-  font-weight: 500;
+.upcoming-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.stat-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #4CAF50;
-  margin: 0;
+.upcoming-time {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
 }
 
+.upcoming-date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+}
+
+/* ============================================
+   MODAL
+   ============================================ */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
-  backdrop-filter: blur(2px);
+  z-index: var(--z-modal);
+  padding: var(--spacing-6);
 }
 
 .modal-content {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  width: 90%;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
   max-width: 500px;
+  width: 100%;
   max-height: 90vh;
   overflow: hidden;
   display: flex;
@@ -549,50 +1122,48 @@ onMounted(() => {
 }
 
 .modal-header {
+  padding: var(--spacing-6);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  border-bottom: 2px solid #f0f0f0;
 }
 
 .modal-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #1a1a1a;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: #6b7280;
-  cursor: pointer;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  transition: all 0.2s;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-base);
+  transition: all var(--transition-fast);
 }
 
 .close-btn:hover {
-  background: #f3f4f6;
-  color: #1a1a1a;
+  background: var(--color-background-tertiary);
+  color: var(--color-text-primary);
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: var(--spacing-6);
   overflow-y: auto;
+  flex: 1;
 }
 
 .detail-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid #f0f0f0;
+  padding: var(--spacing-4) 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .detail-row:last-child {
@@ -600,68 +1171,60 @@ onMounted(() => {
 }
 
 .detail-label {
-  font-weight: 600;
-  color: #6b7280;
-  font-size: 0.9rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  flex: 0 0 120px;
+  font-size: var(--font-size-sm);
 }
 
 .detail-value {
-  color: #1a1a1a;
-  font-size: 1rem;
+  color: var(--color-text-primary);
+  flex: 1;
+  font-size: var(--font-size-sm);
 }
 
 .status-select {
-  padding: 0.5rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  background: white;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.status-select:focus {
-  outline: none;
-  border-color: #4CAF50;
+  flex: 1;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
 }
 
 .modal-footer {
+  padding: var(--spacing-6);
+  border-top: 1px solid var(--color-border);
   display: flex;
-  gap: 1rem;
-  padding: 1.5rem;
-  border-top: 2px solid #f0f0f0;
+  gap: var(--spacing-3);
   justify-content: flex-end;
 }
 
-.btn-save,
-.btn-cancel {
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
+/* Responsive Design */
+@media (max-width: 1400px) {
+  .dashboard-layout {
+    grid-template-columns: 260px 1fr 280px;
+  }
 }
 
-.btn-save {
-  background: #4CAF50;
-  color: white;
+@media (max-width: 1200px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr 300px;
+  }
+
+  .left-panel {
+    display: none;
+  }
 }
 
-.btn-save:hover {
-  background: #45a049;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
-}
+@media (max-width: 900px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
 
-.btn-cancel {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.btn-cancel:hover {
-  background: #e5e7eb;
-  color: #1a1a1a;
+  .right-panel {
+    display: none;
+  }
 }
 </style>
