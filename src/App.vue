@@ -20,7 +20,7 @@ const authStore = useAuthStore()
   height: 100vh;
   width: 100%;
   display: flex;
-  background-color: var(--color-background-secondary);
+  background-color: hsl(var(--background));
   overflow: hidden;
 }
 

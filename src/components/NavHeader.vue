@@ -1,29 +1,13 @@
 <template>
-  <aside class="sidebar">
+  <aside class="sidebar" :class="{ 'collapsed': isCollapsed }">
     <div class="sidebar-header">
       <div class="logo-section">
-        <div class="logo-icon">
+        <div class="logo-icon" @click="toggleSidebar">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
           </svg>
         </div>
         <h1 class="logo">CareTrack</h1>
-      </div>
-    </div>
-
-    <div class="user-profile">
-      <div class="user-avatar">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </div>
-      <div class="user-details">
-        <div class="user-name">Admin</div>
-        <div class="user-badges">
-          <span class="badge badge-primary">Healthcare</span>
-          <span class="badge badge-secondary">Admin</span>
-        </div>
       </div>
     </div>
 
@@ -87,6 +71,7 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useDarkMode } from '@/composables/useDarkMode'
@@ -94,6 +79,11 @@ import { useDarkMode } from '@/composables/useDarkMode'
 const router = useRouter()
 const authStore = useAuthStore()
 const { isDarkMode, toggleDarkMode } = useDarkMode()
+const isCollapsed = ref(false)
+
+function toggleSidebar() {
+  isCollapsed.value = !isCollapsed.value
+}
 
 function handleLogout() {
   authStore.logout()
@@ -108,18 +98,30 @@ function handleLogout() {
   top: 0;
   bottom: 0;
   width: var(--sidebar-width);
-  background-color: #111827;
-  color: white;
+  background-color: hsl(var(--sidebar));
+  color: var(--color-text-primary);
   display: flex;
   flex-direction: column;
   padding: var(--spacing-6) 0;
   z-index: var(--z-fixed);
   box-shadow: var(--shadow-lg);
+  border-right: 1px solid var(--color-border);
+  transition: width var(--transition-base);
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar.collapsed .logo,
+.sidebar.collapsed .nav-link span,
+.sidebar.collapsed .settings-btn span {
+  display: none;
 }
 
 .sidebar-header {
   padding: 0 var(--spacing-6) var(--spacing-6);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .logo-section {
@@ -134,84 +136,32 @@ function handleLogout() {
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: white;
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
   border-radius: var(--radius-base);
-  color: #111827;
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.logo-icon:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
 }
 
 .logo {
   margin: 0;
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  color: white;
+  color: var(--color-text-primary);
   letter-spacing: var(--letter-spacing-tight);
-}
-
-.user-profile {
-  padding: var(--spacing-6);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(139, 92, 246, 0.15));
-  margin: var(--spacing-6) var(--spacing-4);
-  border-radius: var(--radius-lg);
-}
-
-.user-avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
-  border-radius: var(--radius-full);
-  flex-shrink: 0;
-}
-
-.user-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.user-name {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: white;
-  margin-bottom: var(--spacing-1);
-}
-
-.user-badges {
-  display: flex;
-  gap: var(--spacing-2);
-  flex-wrap: wrap;
-}
-
-.badge {
-  display: inline-block;
-  padding: 2px var(--spacing-2);
-  border-radius: var(--radius-sm);
-  font-size: 10px;
-  font-weight: var(--font-weight-medium);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.badge-primary {
-  background-color: var(--color-primary-500);
-  color: white;
-}
-
-.badge-secondary {
-  background-color: var(--color-gray-700);
-  color: var(--color-gray-200);
 }
 
 .nav-links {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1);
-  padding: 0 var(--spacing-4);
+  gap: var(--spacing-2);
+  padding: var(--spacing-6) var(--spacing-4) 0;
   overflow-y: auto;
 }
 
@@ -220,7 +170,7 @@ function handleLogout() {
   align-items: center;
   gap: var(--spacing-3);
   padding: var(--spacing-3) var(--spacing-4);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
   text-decoration: none;
   border-radius: var(--radius-base);
   font-size: var(--font-size-sm);
@@ -230,13 +180,25 @@ function handleLogout() {
 }
 
 .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: #1e3a8a;
   color: white;
 }
 
-.nav-link.router-link-active {
-  background-color: white;
-  color: #111827;
+.dark-mode .nav-link:hover {
+  background-color: #293e60;
+  color: white;
+}
+
+.nav-link.router-link-active,
+.nav-link.router-link-exact-active {
+  background-color: #1e3a8a;
+  color: white;
+}
+
+.dark-mode .nav-link.router-link-active,
+.dark-mode .nav-link.router-link-exact-active {
+  background-color: #293e60;
+  color: white;
 }
 
 .nav-link svg {
@@ -245,7 +207,7 @@ function handleLogout() {
 
 .sidebar-footer {
   padding: var(--spacing-4);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--color-border);
   margin-top: auto;
 }
 
@@ -255,7 +217,7 @@ function handleLogout() {
   gap: var(--spacing-3);
   width: 100%;
   padding: var(--spacing-3) var(--spacing-4);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
   background: transparent;
   border: none;
   border-radius: var(--radius-base);
@@ -266,7 +228,12 @@ function handleLogout() {
 }
 
 .settings-btn:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: #1e3a8a;
+  color: white;
+}
+
+.dark-mode .settings-btn:hover {
+  background-color: #293e60;
   color: white;
 }
 
@@ -280,16 +247,9 @@ function handleLogout() {
   }
 
   .logo span,
-  .user-name,
-  .user-badges,
   .nav-link span,
   .settings-btn span {
     display: none;
-  }
-
-  .user-profile {
-    justify-content: center;
-    padding: var(--spacing-3);
   }
 }
 </style>

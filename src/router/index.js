@@ -4,6 +4,7 @@ import DashboardView from "@/views/DashboardView.vue";
 import PatientDetailView from "@/views/PatientDetailView.vue";
 import PatientsView from "@/views/PatientsView.vue";
 import NewAppointmentView from "@/views/NewAppointmentView.vue";
+import NotFoundView from "@/views/NotFoundView.vue";
 import { useAuthStore } from "@/stores/auth";
 
 const router = createRouter ({
@@ -42,6 +43,11 @@ const router = createRouter ({
       component: NewAppointmentView,
       meta: { requiresAuth: true }
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: NotFoundView
+    }
   ]
 })
 

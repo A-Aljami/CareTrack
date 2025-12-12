@@ -41,6 +41,13 @@ const label = computed(() => {
   border: 1px solid var(--color-primary-200);
 }
 
+/* Better visibility in dark mode */
+.dark-mode .status-badge.scheduled {
+  background-color: var(--color-primary-900);
+  color: var(--color-primary-300);
+  border: 1px solid var(--color-primary-600);
+}
+
 .status-badge.checked-in {
   background-color: var(--color-warning-100);
   color: var(--color-warning-700);

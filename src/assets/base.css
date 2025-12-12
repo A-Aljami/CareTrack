@@ -106,25 +106,59 @@
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
 
-  /* Semantic Color Assignments */
-  --color-background: #ffffff;
-  --color-background-secondary: var(--color-gray-50);
-  --color-background-tertiary: var(--color-gray-100);
-  --color-surface: #ffffff;
-  --color-surface-raised: #ffffff;
+  /* Semantic Color Assignments - Default (Dark Mode) */
+  --background: 225 50% 7.8431%;
+  --foreground: 210 40% 98.0392%;
+  --card: 225 50% 7.8431%;
+  --card-foreground: 210 40% 98.0392%;
+  --popover: 225 50% 7.8431%;
+  --popover-foreground: 210 40% 98.0392%;
+  --primary: 217.0909 40.146% 26.8627%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220.5882 30.3571% 21.9608%;
+  --secondary-foreground: 214.2857 31.8182% 91.3725%;
+  --muted: 217.2414 32.5843% 17.451%;
+  --muted-foreground: 215 20.2247% 65.098%;
+  --accent: 217.2414 32.5843% 17.451%;
+  --accent-foreground: 210 40% 98.0392%;
+  --destructive: 0 67.4699% 32.549%;
+  --destructive-foreground: 210 40% 98.0392%;
+  --border: 220.5882 30.3571% 21.9608%;
+  --input: 217.2414 32.5843% 17.451%;
+  --ring: 217.0909 40.146% 26.8627%;
+  --sidebar: 222.2222 47.3684% 11.1765%;
+  --sidebar-foreground: 215 20.2247% 65.098%;
+  --sidebar-primary: 217.0909 40.146% 26.8627%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217.0909 40.146% 26.8627%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 217.2414 32.5843% 17.451%;
+  --sidebar-ring: 217.0909 40.146% 26.8627%;
 
-  --color-text-primary: var(--color-gray-900);
-  --color-text-secondary: var(--color-gray-600);
-  --color-text-tertiary: var(--color-gray-500);
-  --color-text-disabled: var(--color-gray-400);
-  --color-text-inverse: #ffffff;
+  /* Scrollbar colors */
+  --sb-track-color: hsl(var(--background));
+  --sb-thumb-color: hsl(var(--primary));
+  --sb-size: 6px;
 
-  --color-border: var(--color-gray-200);
-  --color-border-light: var(--color-gray-100);
-  --color-border-strong: var(--color-gray-300);
-  --color-border-hover: var(--color-gray-300);
+  /* Legacy color mappings for compatibility */
+  --color-background: hsl(225, 50%, 7.8431%);
+  --color-background-secondary: hsl(217.2414, 32.5843%, 17.451%);
+  --color-background-tertiary: hsl(220.5882, 30.3571%, 21.9608%);
+  --color-surface: hsl(225, 50%, 7.8431%);
+  --color-surface-raised: hsl(220.5882, 30.3571%, 21.9608%);
 
-  --color-divider: var(--color-gray-200);
+  --color-text-primary: hsl(210, 40%, 98.0392%);
+  --color-text-secondary: hsl(215, 20.2247%, 65.098%);
+  --color-text-tertiary: hsl(215, 20.2247%, 65.098%);
+  --color-text-disabled: #64748b;
+  --color-text-inverse: hsl(225, 50%, 7.8431%);
+
+  --color-border: hsl(220.5882, 30.3571%, 21.9608%);
+  --color-border-light: hsl(217.2414, 32.5843%, 17.451%);
+  --color-border-strong: hsl(220.5882, 30.3571%, 21.9608%);
+  --color-border-hover: hsl(220.5882, 30.3571%, 21.9608%);
+
+  --color-divider: hsl(220.5882, 30.3571%, 21.9608%);
 
   /* ============================================
      SPACING SYSTEM (8px base)
@@ -440,50 +474,84 @@ textarea {
 /* ============================================
    SCROLLBAR STYLING
    ============================================ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: var(--sb-size);
+  height: var(--sb-size);
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-gray-100);
+  background: var(--sb-track-color);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-gray-300);
+  background: var(--sb-thumb-color);
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gray-400);
+  background: hsl(var(--primary) / 0.8);
 }
 
 /* ============================================
-   DARK MODE
+   DARK MODE (LIGHT MODE OVERRIDE)
    ============================================ */
 .dark-mode {
-  /* Dark mode background colors */
-  --color-background: #0f172a;
-  --color-background-secondary: #1e293b;
-  --color-background-tertiary: #334155;
-  --color-surface: #1e293b;
-  --color-surface-raised: #334155;
+  /* Light mode colors */
+  --background: 217.5 80% 98.0392%;
+  --foreground: 222.8571 84% 4.902%;
+  --card: 217.5 80% 98.0392%;
+  --card-foreground: 222.8571 84% 4.902%;
+  --popover: 217.5 80% 98.0392%;
+  --popover-foreground: 222.8571 84% 4.902%;
+  --primary: 224.4444 64.2857% 32.9412%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 215 66.6667% 92.9412%;
+  --secondary-foreground: 215.2941 25% 26.6667%;
+  --muted: 216.6667 90% 96.0784%;
+  --muted-foreground: 214.5 17.094% 45.8824%;
+  --accent: 216.6667 90% 96.0784%;
+  --accent-foreground: 222.2222 47.3684% 11.1765%;
+  --destructive: 0 84.2365% 60.1961%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 214 40.6667% 86.9412%;
+  --input: 215 66.6667% 92.9412%;
+  --ring: 224.2781 76.3265% 48.0392%;
+  --sidebar: 216.6667 90% 96.0784%;
+  --sidebar-foreground: 215.2941 25% 26.6667%;
+  --sidebar-primary: 224.4444 64.2857% 32.9412%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 224.4444 64.2857% 32.9412%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 214.2857 31.8182% 91.3725%;
+  --sidebar-ring: 224.4444 64.2857% 32.9412%;
 
-  /* Dark mode text colors */
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #cbd5e1;
-  --color-text-tertiary: #94a3b8;
+  /* Legacy color mappings for compatibility */
+  --color-background: hsl(217.5, 80%, 98.0392%);
+  --color-background-secondary: hsl(216.6667, 90%, 96.0784%);
+  --color-background-tertiary: hsl(215, 66.6667%, 92.9412%);
+  --color-surface: hsl(217.5, 80%, 98.0392%);
+  --color-surface-raised: hsl(216.6667, 90%, 96.0784%);
+
+  /* Light mode text colors */
+  --color-text-primary: hsl(222.8571, 84%, 4.902%);
+  --color-text-secondary: hsl(215.2941, 25%, 26.6667%);
+  --color-text-tertiary: hsl(214.5, 17.094%, 45.8824%);
   --color-text-disabled: #64748b;
-  --color-text-inverse: #0f172a;
+  --color-text-inverse: hsl(217.5, 80%, 98.0392%);
 
-  /* Dark mode border colors */
-  --color-border: #334155;
-  --color-border-light: #1e293b;
-  --color-border-strong: #475569;
-  --color-border-hover: #475569;
+  /* Light mode border colors */
+  --color-border: hsl(214, 40.6667%, 86.9412%);
+  --color-border-light: hsl(216.6667, 90%, 96.0784%);
+  --color-border-strong: hsl(214, 40.6667%, 86.9412%);
+  --color-border-hover: hsl(214, 40.6667%, 86.9412%);
 
-  /* Dark mode divider */
-  --color-divider: #334155;
+  /* Light mode divider */
+  --color-divider: hsl(214, 40.6667%, 86.9412%);
 
   /* Adjusted gray scale for dark mode */
   --color-gray-50: #1e293b;

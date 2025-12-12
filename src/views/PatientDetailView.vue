@@ -120,8 +120,8 @@
               </div>
 
               <div class="form-actions">
-                <BaseButton type="button" variant="ghost" @click="showForm = false">Cancel</BaseButton>
-                <BaseButton type="submit" variant="success">Save Note</BaseButton>
+                <BaseButton type="button" variant="secondary" @click="showForm = false">Cancel</BaseButton>
+                <BaseButton type="submit" variant="primary">Save Note</BaseButton>
               </div>
             </form>
 

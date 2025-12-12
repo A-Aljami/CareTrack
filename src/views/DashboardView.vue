@@ -83,34 +83,29 @@
         <!-- Main Content: Calendar -->
         <main class="main-content">
           <div class="calendar-header">
-            <div class="header-title">
-              <h1>Appointments</h1>
-              <button class="today-btn" @click="goToToday">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
+            <h1>Appointments</h1>
+            <div class="week-navigator">
+              <button class="nav-btn" @click="previousPeriod">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
-                Today
+              </button>
+              <span class="week-label">{{ currentWeekLabel }}</span>
+              <button class="nav-btn" @click="nextPeriod">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
               </button>
             </div>
-            <div class="header-controls">
-              <div class="week-navigator">
-                <button class="nav-btn" @click="previousWeek">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="15 18 9 12 15 6"></polyline>
-                  </svg>
-                </button>
-                <span class="week-label">{{ currentWeekLabel }}</span>
-                <button class="nav-btn" @click="nextWeek">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                </button>
-              </div>
-              <select v-model="viewMode" class="view-select">
-                <option value="day">Day</option>
-                <option value="week">Week</option>
-              </select>
-            </div>
+            <button class="view-toggle-btn" @click="toggleViewMode">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>{{ viewMode === 'day' ? 'Day' : 'Week' }}</span>
+            </button>
           </div>
 
           <div class="calendar-container">
@@ -470,18 +465,26 @@ function nextMonth() {
   currentMonthOffset.value++
 }
 
-function previousWeek() {
-  currentWeekOffset.value--
+function previousPeriod() {
+  if (viewMode.value === 'week') {
+    currentWeekOffset.value--
+  } else {
+    // Day mode: navigate to previous day
+    const newDate = new Date(selectedDate.value)
+    newDate.setDate(newDate.getDate() - 1)
+    selectedDate.value = newDate
+  }
 }
 
-function nextWeek() {
-  currentWeekOffset.value++
-}
-
-function goToToday() {
-  selectedDate.value = new Date()
-  currentWeekOffset.value = 0
-  currentMonthOffset.value = 0
+function nextPeriod() {
+  if (viewMode.value === 'week') {
+    currentWeekOffset.value++
+  } else {
+    // Day mode: navigate to next day
+    const newDate = new Date(selectedDate.value)
+    newDate.setDate(newDate.getDate() + 1)
+    selectedDate.value = newDate
+  }
 }
 
 function isToday(date) {
@@ -507,8 +510,12 @@ function closeModal() {
 }
 
 function saveAppointment() {
-  appointmentsStore.updateAppointment(selectedAppointment.value)
+  appointmentsStore.updateAppointmentStatus(selectedAppointment.value.id, selectedAppointment.value.status)
   closeModal()
+}
+
+function toggleViewMode() {
+  viewMode.value = viewMode.value === 'day' ? 'week' : 'day'
 }
 
 function formatShortDate(dateStr) {
@@ -585,8 +592,13 @@ onMounted(async () => {
 }
 
 .month-nav-btn:hover {
-  background: var(--color-gray-200);
-  color: var(--color-text-primary);
+  background: #1e3a8a;
+  color: white;
+}
+
+.dark-mode .month-nav-btn:hover {
+  background: #293e60;
+  color: white;
 }
 
 .mini-calendar {
@@ -646,22 +658,17 @@ onMounted(async () => {
   opacity: 0.5;
 }
 
-.mini-day:not(.other-month):not(:disabled):hover {
-  background: var(--color-primary-50);
+.mini-day.selected {
+  background: #1e3a8a;
 }
 
-.mini-day.today {
-  background: var(--color-primary-500);
+.dark-mode .mini-day.selected {
+  background: #293e60;
 }
 
-.mini-day.today .mini-day-number {
+.mini-day.selected .mini-day-number {
   color: white;
   font-weight: var(--font-weight-semibold);
-}
-
-.mini-day.selected {
-  background: var(--color-primary-100);
-  border: 2px solid var(--color-primary-500);
 }
 
 .mini-day.has-events::after {
@@ -674,7 +681,7 @@ onMounted(async () => {
   border-radius: var(--radius-full);
 }
 
-.mini-day.today.has-events::after {
+.mini-day.selected.has-events::after {
   background: white;
 }
 
@@ -701,14 +708,27 @@ onMounted(async () => {
 }
 
 .filter-btn:hover {
-  background: var(--color-background-tertiary);
-  border-color: var(--color-border-strong);
+  background: #1e3a8a;
+  border-color: #1e3a8a;
+  color: white;
+}
+
+.dark-mode .filter-btn:hover {
+  background: #293e60;
+  border-color: #293e60;
+  color: white;
 }
 
 .filter-btn.active {
-  background: var(--color-primary-50);
-  border-color: var(--color-primary-500);
-  color: var(--color-primary-700);
+  background: #1e3a8a;
+  border-color: #1e3a8a;
+  color: white;
+}
+
+.dark-mode .filter-btn.active {
+  background: #293e60;
+  border-color: #293e60;
+  color: white;
 }
 
 .filter-dot {
@@ -754,58 +774,30 @@ onMounted(async () => {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border);
   overflow: hidden;
+  height: 100%;
 }
 
 .calendar-header {
   padding: var(--spacing-6);
   border-bottom: 1px solid var(--color-border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header-title {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: var(--spacing-4);
 }
 
-.header-title h1 {
+.calendar-header h1 {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
-}
-
-.today-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-2) var(--spacing-4);
-  background: var(--color-background-tertiary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.today-btn:hover {
-  background: var(--color-gray-200);
-  color: var(--color-text-primary);
-}
-
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-4);
+  justify-self: start;
 }
 
 .week-navigator {
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
+  justify-self: center;
 }
 
 .nav-btn {
@@ -823,9 +815,15 @@ onMounted(async () => {
 }
 
 .nav-btn:hover {
-  background: var(--color-background-tertiary);
-  border-color: var(--color-border-strong);
-  color: var(--color-text-primary);
+  background: #1e3a8a;
+  border-color: #1e3a8a;
+  color: white;
+}
+
+.dark-mode .nav-btn:hover {
+  background: #293e60;
+  border-color: #293e60;
+  color: white;
 }
 
 .week-label {
@@ -836,25 +834,50 @@ onMounted(async () => {
   text-align: center;
 }
 
-.view-select {
+.view-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
   padding: var(--spacing-2) var(--spacing-4);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-base);
-  background: var(--color-surface);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
   cursor: pointer;
+  transition: all var(--transition-fast);
+  justify-self: end;
+}
+
+.view-toggle-btn:hover {
+  background: #1e3a8a;
+  color: white;
+  border-color: #1e3a8a;
+}
+
+.dark-mode .view-toggle-btn:hover {
+  background: #293e60;
+  color: white;
+  border-color: #293e60;
+}
+
+.view-toggle-btn svg {
+  flex-shrink: 0;
 }
 
 .calendar-container {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .calendar-grid {
   min-width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .day-headers {
@@ -884,42 +907,62 @@ onMounted(async () => {
 
 .day-header {
   background: var(--color-surface);
-  padding: var(--spacing-4);
+  padding: var(--spacing-2) var(--spacing-3);
   text-align: center;
 }
 
 .day-header.today {
-  background: var(--color-primary-50);
+  background: #1e3a8a;
+}
+
+.dark-mode .day-header.today {
+  background: #293e60;
 }
 
 .day-label {
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   font-weight: var(--font-weight-medium);
   color: var(--color-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
+.day-header.today .day-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.dark-mode .day-header.today .day-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .day-number {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
-  margin-top: var(--spacing-1);
+  margin-top: 2px;
 }
 
 .day-header.today .day-number {
-  color: var(--color-primary-600);
+  color: white;
+}
+
+.dark-mode .day-header.today .day-number {
+  color: white;
 }
 
 .time-grid-container {
   background: var(--color-background-secondary);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .time-row {
   display: grid;
   gap: 1px;
   background: var(--color-border);
-  min-height: 80px;
+  flex: 1;
+  min-height: 50px;
 }
 
 /* Day view: 1 column */
@@ -934,8 +977,8 @@ onMounted(async () => {
 
 .time-label {
   background: var(--color-surface);
-  padding: var(--spacing-3);
-  font-size: var(--font-size-xs);
+  padding: var(--spacing-2);
+  font-size: 11px;
   color: var(--color-text-tertiary);
   text-align: right;
   font-weight: var(--font-weight-medium);
@@ -943,18 +986,22 @@ onMounted(async () => {
 
 .time-cell {
   background: var(--color-surface);
-  padding: var(--spacing-2);
+  padding: var(--spacing-1);
   position: relative;
-  min-height: 80px;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .appointment-card {
-  padding: var(--spacing-3);
+  padding: var(--spacing-2);
   border-radius: var(--radius-base);
   border-left: 3px solid;
   cursor: pointer;
   transition: all var(--transition-fast);
-  margin-bottom: var(--spacing-2);
+  margin-bottom: var(--spacing-1);
+  flex-shrink: 0;
 }
 
 .appointment-card:last-child {
@@ -962,44 +1009,44 @@ onMounted(async () => {
 }
 
 .appointment-card.status-scheduled {
-  background: var(--color-primary-50);
-  border-color: var(--color-primary-500);
+  background: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary));
 }
 
 .appointment-card.status-checked-in {
-  background: var(--color-warning-50);
-  border-color: var(--color-warning-500);
+  background: hsl(39 100% 50% / 0.1);
+  border-color: hsl(39 100% 50%);
 }
 
 .appointment-card.status-completed {
-  background: var(--color-success-50);
-  border-color: var(--color-success-500);
+  background: hsl(142 71% 45% / 0.1);
+  border-color: hsl(142 71% 45%);
 }
 
 .appointment-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .appointment-time {
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-1);
+  margin-bottom: 2px;
 }
 
 .appointment-title {
-  font-size: var(--font-size-sm);
+  font-size: 12px;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-1);
+  margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .appointment-subtitle {
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   color: var(--color-text-tertiary);
   white-space: nowrap;
   overflow: hidden;
@@ -1049,7 +1096,11 @@ onMounted(async () => {
 .upcoming-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
-  border-color: var(--color-border-strong);
+  border-color: #1e3a8a;
+}
+
+.dark-mode .upcoming-card:hover {
+  border-color: #293e60;
 }
 
 .upcoming-icon {

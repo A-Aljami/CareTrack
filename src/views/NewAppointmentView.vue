@@ -91,7 +91,7 @@
 
           <div class="form-actions">
             <BaseButton type="button" variant="ghost" @click="goBack">Cancel</BaseButton>
-            <BaseButton type="submit" variant="success">
+            <BaseButton type="submit" variant="primary">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
@@ -136,6 +136,14 @@ function handleSubmit() {
 
   if (selectedDate < now) {
     errorMessage.value = 'Date and time cannot be in the past'
+    return
+  }
+
+  // Validate working hours (9 AM - 5 PM)
+  const selectedHour = parseInt(appointment.value.time.split(':')[0])
+
+  if (selectedHour < 9 || selectedHour >= 17) {
+    errorMessage.value = 'Appointments must be scheduled between 9:00 AM and 5:00 PM (working hours only)'
     return
   }
 
