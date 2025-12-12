@@ -16,25 +16,11 @@ const authStore = useAuthStore()
 </script>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body {
-  height: 100%;
-  width: 100%;
-  font-family: Arial, sans-serif;
-  overflow: hidden;
-}
-
 #app {
   height: 100vh;
   width: 100%;
   display: flex;
-  flex-direction: column;
-  background-color: #f8f9fa;
+  background-color: var(--color-background-secondary);
   overflow: hidden;
 }
 
@@ -43,15 +29,15 @@ html, body {
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.main-content::-webkit-scrollbar {
-  display: none;
 }
 
 .main-content.has-header {
-  padding-top: 70px;
+  margin-left: var(--sidebar-width);
+}
+
+@media (max-width: 768px) {
+  .main-content.has-header {
+    margin-left: 70px;
+  }
 }
 </style>

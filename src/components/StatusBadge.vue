@@ -23,42 +23,51 @@ const label = computed(() => {
 
 <style scoped>
 .status-badge {
-  display: inline-block;
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: capitalize;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.025em;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .status-badge.scheduled {
-  background-color: #e3f2fd;
-  color: #1976d2;
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-700);
+  border: 1px solid var(--color-primary-200);
 }
 
 .status-badge.checked-in {
-  background-color: #fff3e0;
-  color: #f57c00;
+  background-color: var(--color-warning-100);
+  color: var(--color-warning-700);
+  border: 1px solid var(--color-warning-200);
 }
 
 .status-badge.completed {
-  background-color: #e8f5e9;
-  color: #388e3c;
+  background-color: var(--color-success-100);
+  color: var(--color-success-700);
+  border: 1px solid var(--color-success-200);
 }
 
 .status-badge.pending {
-  background-color: #fce4ec;
-  color: #c2185b;
+  background-color: var(--color-danger-100);
+  color: var(--color-danger-700);
+  border: 1px solid var(--color-danger-200);
 }
 
 .status-badge.active {
-  background-color: #e8f5e9;
-  color: #388e3c;
+  background-color: var(--color-success-100);
+  color: var(--color-success-700);
+  border: 1px solid var(--color-success-200);
 }
 
 .status-badge.inactive {
-  background-color: #f5f5f5;
-  color: #757575;
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-700);
+  border: 1px solid var(--color-gray-200);
 }
 </style>
